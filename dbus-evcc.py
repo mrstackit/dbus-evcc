@@ -140,7 +140,7 @@ class DbusEvccChargerService:
             self._dbusservice['/Ac/L3/Power'] = float(loadpoint['chargeCurrents'][2]) * voltage # watt
             self._dbusservice['/Ac/Voltage'] = voltage
 
-            self._dbusservice['/Ac/Power'] = float(loadpoint['chargePower']) * 1000 # w
+            self._dbusservice['/Ac/Power'] = float(loadpoint['chargePower']) # w
             self._dbusservice['/Current'] = float(loadpoint['chargeCurrent'])
 
             self._dbusservice['/SetCurrent'] = float(loadpoint['chargeCurrent'])
@@ -175,14 +175,10 @@ class DbusEvccChargerService:
             else:
                 self._dbusservice['/Ac/Energy/Forward'] = float(loadpoint['chargedEnergy']) / 1000  # kWh
 
-
-            # update chargingTime, increment charge time only on active charging (2), reset when no car connected (1)
-            timeDelta = time.time() - self._lastUpdate
-            if status == 1 and self._lastUpdate > 0:  # vehicle loads
-                self._chargingTime += timeDelta
-            elif status == 0:  # charging station ready, no vehicle
-                self._chargingTime = 0
-            self._dbusservice['/ChargingTime'] = int(self._chargingTime)
+            if status == 0:
+                self._dbusservice['/ChargingTime'] = 0
+            else:
+                self._dbusservice['/ChargingTime'] = int(loadpoint["chargeDuration"])/1000000000  # s
 
             # logging
             logging.debug("Wallbox Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
