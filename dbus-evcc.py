@@ -20,8 +20,8 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/d
 from vedbus import VeDbusService
 
 
-class DbusEvseChargerService:
-    def __init__(self, servicename, paths, productname='EVSE-Charger', connection='OpenEVSE JSON RAPI'):
+class DbusEvccChargerService:
+    def __init__(self, servicename, paths, productname='EVCC-Charger', connection='EVCC REST API'):
         config = self._getConfig()
         deviceinstance = int(config['DEFAULT']['Deviceinstance'])
 
@@ -32,13 +32,11 @@ class DbusEvseChargerService:
 
         paths_wo_unit = [
             '/Status',
-            # value 'state' EVSE State - 1 Not Connected - 2 Connected - 3 Charging - 4 Error, 254 - sleep, 255 - disabled
-		# old_goecharger 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
             '/Mode'
         ]
 
         # get data from go-eCharger
-        data = self._getEvseChargerData()
+        data = self._getEvccChargerData()
 
         # Create the management objects, as specified in the ccgx dbus-api document
         self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
@@ -51,9 +49,9 @@ class DbusEvseChargerService:
         self._dbusservice.add_path('/ProductId', 0xFFFF)  #
         self._dbusservice.add_path('/ProductName', productname)
         self._dbusservice.add_path('/CustomName', productname)
-        self._dbusservice.add_path('/FirmwareVersion', int(data['divert_update']))
+        #self._dbusservice.add_path('/FirmwareVersion', int(data['divert_update']))
         self._dbusservice.add_path('/HardwareVersion', 2)
-        self._dbusservice.add_path('/Serial', data['comm_success'])
+        #self._dbusservice.add_path('/Serial', data['comm_success'])
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/UpdateIndex', 0)
 
@@ -64,8 +62,7 @@ class DbusEvseChargerService:
         # add path values to dbus
         for path, settings in self._paths.items():
             self._dbusservice.add_path(
-                path, settings['initial'], gettextcallback=settings['textformat'], writeable=True,
-                onchangecallback=self._handlechangedvalue)
+                path, settings['initial'], gettextcallback=settings['textformat'], writeable=False)
 
         # last update
         self._lastUpdate = 0
@@ -93,55 +90,24 @@ class DbusEvseChargerService:
 
         return int(value)
 
-    def _getEvseChargerStatusUrl(self):
+    def _getEvccChargerStatusUrl(self):
         config = self._getConfig()
         accessType = config['DEFAULT']['AccessType']
 
         if accessType == 'OnPremise':
-            URL = "http://%s/status" % (config['ONPREMISE']['Host'])
+            URL = "http://%s/api/state" % (config['ONPREMISE']['Host'])
         else:
             raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
 
         return URL
 
-    def _getEvseChargerMqttPayloadUrl(self, parameter, value):
-        config = self._getConfig()
-        accessType = config['DEFAULT']['AccessType']
-
-        if accessType == 'OnPremise':
-            URL = "http://%s/r?json=1&rapi=$%s%s" % (config['ONPREMISE']['Host'], parameter, value)
-        else:
-            raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
-
-        return URL
-
-    def _setEvseChargerValue(self, parameter, value):
-        URL = self._getEvseChargerMqttPayloadUrl(parameter, str(value))
+    def _getEvccChargerData(self):
+        URL = self._getEvccChargerStatusUrl()
         request_data = requests.get(url=URL)
 
         # check for response
         if not request_data:
-            raise ConnectionError("No response from Evse-Charger - %s" % (URL))
-
-        json_data = request_data.json()
-
-        # check for Json
-        if not json_data:
-            raise ValueError("Converting response to JSON failed")
-
-        if json_data[parameter] == str(value):
-            return True
-        else:
-            logging.warning("Evse-Charger parameter %s not set to %s" % (parameter, str(value)))
-            return False
-
-    def _getEvseChargerData(self):
-        URL = self._getEvseChargerStatusUrl()
-        request_data = requests.get(url=URL)
-
-        # check for response
-        if not request_data:
-            raise ConnectionError("No response from Evse-Charger - %s" % (URL))
+            raise ConnectionError("No response from EVCC-Charger - %s" % (URL))
 
         json_data = request_data.json()
 
@@ -161,54 +127,62 @@ class DbusEvseChargerService:
     def _update(self):
         try:
             # get data from go-eCharger
-            data = self._getEvseChargerData()
+            data = self._getEvccChargerData()
+            result = data["result"]
+            loadpoint = result["loadpoints"][0]
 
             # send data to DBus
-	    voltage = int(data['voltage'])
-            self._dbusservice['/Ac/L1/Power'] = int(data['amp'] * voltage / 1000)
-            self._dbusservice['/Ac/L2/Power'] = 0
-            self._dbusservice['/Ac/L3/Power'] = 0
-            self._dbusservice['/Ac/Power'] = int(data['amp'] * voltage / 1000)
-            self._dbusservice['/Ac/Voltage'] = voltage
-            self._dbusservice['/Current'] = float(data['amp'] / 1000)
-            self._dbusservice['/Ac/Energy/Forward'] = float(data['wattsec'] / 3600000)  # int(float(data['eto']) / 10.0)
-            if int(data['state']) == 1 or int(data['state']) == 3:
-                self._dbusservice['/StartStop'] = 1
-            else:
-                self._dbusservice['/StartStop'] = 0
 
-#            self._dbusservice['/StartStop'] = int(data['divertmode'])
-            self._dbusservice['/SetCurrent'] = int(data['pilot'])
-            self._dbusservice['/MaxCurrent'] = 32  # int(data['ama'])
+            # not really needed, but can be enabled
+            voltage = 230 # adjust to your voltage
+            self._dbusservice['/Ac/L1/Power'] = float(loadpoint['chargeCurrents'][0]) * voltage # watt
+            self._dbusservice['/Ac/L2/Power'] = float(loadpoint['chargeCurrents'][1]) * voltage # watt
+            self._dbusservice['/Ac/L3/Power'] = float(loadpoint['chargeCurrents'][2]) * voltage # watt
+            self._dbusservice['/Ac/Voltage'] = voltage
+
+            self._dbusservice['/Ac/Power'] = float(loadpoint['chargePower']) * 1000 # w
+            self._dbusservice['/Current'] = float(loadpoint['chargeCurrent'])
+
+            self._dbusservice['/SetCurrent'] = float(loadpoint['chargeCurrent'])
+            self._dbusservice['/MaxCurrent'] = int(loadpoint['maxCurrent']) # int(data['ama'])
+
+
+            # 0: Manual, 1: Auto, 2: Scheduled
+            if "pv" in loadpoint["mode"]:
+                self._dbusservice['/Mode'] = 1
+                self._dbusservice['/StartStop'] = 1
+            elif loadpoint["mode"] == "off":
+                self._dbusservice['/Mode'] = 0
+                self._dbusservice['/StartStop'] = 0
+            else:
+                self._dbusservice['/Mode'] = 0
+                self._dbusservice['/StartStop'] = 1
+
+	        # 0:EVdisconnected; 1:Connected; 2:Charging; 3:Charged; 4:Wait sun; 5:Wait RFID; 6:Wait enable; 7:Low SOC; 8:Ground error; 9:Welded contacts error; defaut:Unknown;
+            status = 0
+            if loadpoint['connected'] == False:
+                status = 0
+            elif loadpoint['connected'] == True:
+                if loadpoint['charging'] == False:
+                    status = 1
+                else:
+                    status = 2
+            self._dbusservice['/Status'] = status
+
+            # is this session charged energy or total charged energy?
+            if status == 0:
+                self._dbusservice['/Ac/Energy/Forward'] = 0
+            else:
+                self._dbusservice['/Ac/Energy/Forward'] = float(loadpoint['chargedEnergy']) / 1000  # kWh
+
 
             # update chargingTime, increment charge time only on active charging (2), reset when no car connected (1)
             timeDelta = time.time() - self._lastUpdate
-            if int(data['state']) == 3 and self._lastUpdate > 0:  # vehicle loads
+            if status == 1 and self._lastUpdate > 0:  # vehicle loads
                 self._chargingTime += timeDelta
-            elif int(data['state']) == 1:  # charging station ready, no vehicle
+            elif status == 0:  # charging station ready, no vehicle
                 self._chargingTime = 0
             self._dbusservice['/ChargingTime'] = int(self._chargingTime)
-
-            self._dbusservice['/Mode'] = 0  # Manual, no control
-            self._dbusservice['/MCU/Temperature'] = int(data['temp1'])
-
-	# 'state' EVSE State - 1 Not Connected - 2 Connected - 3 Charging - 4 Error, 254 - sleep, 255 - disabled
-            # value 'car' 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
-	# 0:EVdisconnected; 1:Connected; 2:Charging; 3:Charged; 4:Wait sun; 5:Wait RFID; 6:Wait enable; 7:Low SOC; 8:Ground error; 9:Welded contacts error; defaut:Unknown;
-            status = 0
-            if int(data['state']) == 1:
-                status = 0
-            elif int(data['state']) == 2:
-                status = 1
-            elif int(data['state']) == 3:
-                status = 2
-            elif int(data['state']) ==4:
-                status = 8
-            elif int(data['state']) ==255:
-                status = 6
-            elif int(data['state']) ==254:
-                status = 4
-            self._dbusservice['/Status'] = status
 
             # logging
             logging.debug("Wallbox Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
@@ -228,19 +202,6 @@ class DbusEvseChargerService:
 
         # return true, otherwise add_timeout will be removed from GObject - see docs http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
         return True
-
-    def _handlechangedvalue(self, path, value):
-        logging.info("someone else updated %s to %s" % (path, value))
-
-        if path == '/SetCurrent':
-            return self._setEvseChargerValue('SC+', value)
-        elif path == '/StartStop':
-            return self._setEvseChargerValue('F', '1') #F1
-        elif path == '/MaxCurrent':
-            return self._setEvseChargerValue('ama', value)
-        else:
-            logging.info("mapping for evcharger path %s does not exist" % (path))
-            return False
 
 
 def main():
@@ -265,11 +226,11 @@ def main():
         _a = lambda p, v: (str(round(v, 1)) + 'A')
         _w = lambda p, v: (str(round(v, 1)) + 'W')
         _v = lambda p, v: (str(round(v, 1)) + 'V')
-        _degC = lambda p, v: (str(v) + '°C')
+        #_degC = lambda p, v: (str(v) + '°C')
         _s = lambda p, v: (str(v) + 's')
 
         # start our main-service
-        pvac_output = DbusEvseChargerService(
+        pvac_output = DbusEvccChargerService(
             servicename='com.victronenergy.evcharger',
             paths={
                 '/Ac/Power': {'initial': 0, 'textformat': _w},
@@ -278,12 +239,11 @@ def main():
                 '/Ac/L3/Power': {'initial': 0, 'textformat': _w},
                 '/Ac/Energy/Forward': {'initial': 0, 'textformat': _kwh},
                 '/ChargingTime': {'initial': 0, 'textformat': _s},
-
                 '/Ac/Voltage': {'initial': 0, 'textformat': _v},
                 '/Current': {'initial': 0, 'textformat': _a},
                 '/SetCurrent': {'initial': 0, 'textformat': _a},
                 '/MaxCurrent': {'initial': 0, 'textformat': _a},
-                '/MCU/Temperature': {'initial': 0, 'textformat': _degC},
+                #'/MCU/Temperature': {'initial': 0, 'textformat': _degC},
                 '/StartStop': {'initial': 0, 'textformat': lambda p, v: (str(v))}
             }
         )
