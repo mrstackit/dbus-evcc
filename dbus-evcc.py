@@ -55,6 +55,8 @@ class DbusEvccChargerService:
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/UpdateIndex', 0)
 
+        self._dbusservice.add_path('/Position', 1) # 0: ac out, 1: ac in
+
         # add paths without units
         for path in paths_wo_unit:
             self._dbusservice.add_path(path, None)
