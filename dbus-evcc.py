@@ -54,7 +54,7 @@ class DbusEvccChargerService:
         self._dbusservice.add_path('/', )
         self._dbusservice.add_path('/ProductId', 0xFFFF)  #
         self._dbusservice.add_path('/ProductName', productname)
-        self._dbusservice.add_path('/CustomName', productname)
+        self._dbusservice.add_path('/CustomName', customname)
         #self._dbusservice.add_path('/FirmwareVersion', int(data['divert_update']))
         self._dbusservice.add_path('/HardwareVersion', 2)
         #self._dbusservice.add_path('/Serial', data['comm_success'])
