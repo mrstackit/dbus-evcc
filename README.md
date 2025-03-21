@@ -33,7 +33,7 @@ Within the project there is a file `/data/dbus-evcc/config.ini` - just change th
 ## If you have two or more load points in EVCC
 1. Follow the installation instructions above, but change the commands as follows:
    ```
-   wget https://github.com/SamuelBrucksch/dbus-evcc/archive/refs/heads/main.zip
+   wget https://github.com/tm-107/dbus-evcc/archive/refs/heads/main.zip
    unzip main.zip "dbus-evcc-main/*" -d /data
    mv /data/dbus-evcc-main /data/dbus-evcc-1
    chmod a+x /data/dbus-evcc-1/install.sh
@@ -49,8 +49,10 @@ Within the project there is a file `/data/dbus-evcc/config.ini` - just change th
 If you have more than two loadpoints, the procedure is the same, but the index should be counted up.
 
 ## Useful links
-Many thanks. @vikt0rm, @fabian-lauer, @trixing and @JuWorkshop project:
+Many thanks. @vikt0rm, @fabian-lauer, @trixing, @JuWorkshop, @SamuelBrucksch and @Naiki92 project:
 - https://github.com/trixing/venus.dbus-twc3
 - https://github.com/fabian-lauer/dbus-shelly-3em-smartmeter
 - https://github.com/vikt0rm/dbus-goecharger
 - https://github.com/JuWorkshop/dbus-evsecharger
+- https://github.com/SamuelBrucksch/dbus-evcc
+- https://github.com/Naiki92/dbus-evcc
