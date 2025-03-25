@@ -24,8 +24,8 @@ class DbusEvccChargerService:
     def __init__(self, servicename, paths, productname='EVCC-Charger', connection='EVCC REST API'):
         config = self._getConfig()
         deviceinstance = int(config['DEFAULT']['Deviceinstance'])
-	lpInstance = int(config['DEFAULT']['LoadpointInstance'])
-	acPosition = int(config['DEFAULT']['AcPosition'])
+        lpInstance = int(config['DEFAULT']['LoadpointInstance'])
+        acPosition = int(config['DEFAULT']['AcPosition'])
 
         self._dbusservice = VeDbusService("{}.http_{:02d}".format(servicename, deviceinstance))
         self._paths = paths
@@ -39,7 +39,7 @@ class DbusEvccChargerService:
 
         # get data from go-eCharger
         data = self._getEvccChargerData()
-	result = data["result"]
+        result = data["result"]
         loadpoint = result["loadpoints"][lpInstance]
 
         # Set custom name from loadpoint title
