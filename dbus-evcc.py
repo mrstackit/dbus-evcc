@@ -52,7 +52,7 @@ class DbusEvccChargerService:
         self._dbusservice.add_path('/Mgmt/Connection', connection)
 
         # Create the mandatory objects
-        self._dbusservice.add_path('/', )
+        self._dbusservice.add_path('/DeviceInstance', deviceinstance)
         self._dbusservice.add_path('/ProductId', 0xFFFF)  #
         self._dbusservice.add_path('/ProductName', productname)
         self._dbusservice.add_path('/CustomName', customname)
