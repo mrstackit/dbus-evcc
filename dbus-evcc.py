@@ -53,7 +53,7 @@ class DbusEvccChargerService:
 
         # Create the mandatory objects
         self._dbusservice.add_path('/DeviceInstance', deviceinstance)
-        self._dbusservice.add_path('/ProductId', 0xFFFF)  #
+        self._dbusservice.add_path('/ProductId', 0xC025)  # found on https://gist.github.com/seidler2547/52f3e91cbcbf2fa257ae79371bb78588 - should be EV Charge Station 32A
         self._dbusservice.add_path('/ProductName', productname)
         self._dbusservice.add_path('/CustomName', customname)
         #self._dbusservice.add_path('/FirmwareVersion', int(data['divert_update']))
