@@ -37,7 +37,7 @@ class DbusEvccChargerService:
             '/Mode'
         ]
 
-        # get data from go-eCharger
+        # get data from evcc
         data = self._getEvccChargerData()
         result = data["result"]
         loadpoint = result["loadpoints"][lpInstance]
@@ -135,8 +135,8 @@ class DbusEvccChargerService:
 
     def _update(self):
         try:
-            # get data from go-eCharger
-	    config = self._getConfig()
+            # get data from evcc
+            config = self._getConfig()
             lpInstance = int(config['DEFAULT']['LoadpointInstance'])
             data = self._getEvccChargerData()
             result = data["result"]
