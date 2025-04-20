@@ -151,10 +151,10 @@ class DbusEvccChargerService:
             self._dbusservice['/Ac/L3/Power'] = float(loadpoint['chargeCurrents'][2]) * voltage # watt
             self._dbusservice['/Ac/Voltage'] = voltage
 
-            self._dbusservice['/Ac/Power'] = float(loadpoint['chargePower']) # w
-            self._dbusservice['/Current'] = float(loadpoint['chargeCurrent'])
+            self._dbusservice['/Ac/Power'] = float(loadpoint['chargePower']) # watt
+            #self._dbusservice['/Current'] = float(loadpoint['chargeCurrents'][0])
 
-            self._dbusservice['/SetCurrent'] = float(loadpoint['chargeCurrent'])
+            #self._dbusservice['/SetCurrent'] = float(loadpoint['chargeCurrents'][0])
             self._dbusservice['/MaxCurrent'] = int(loadpoint['maxCurrent']) # int(data['ama'])
 
 
