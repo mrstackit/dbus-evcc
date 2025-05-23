@@ -152,9 +152,9 @@ class DbusEvccChargerService:
             self._dbusservice['/Ac/Voltage'] = voltage
 
             self._dbusservice['/Ac/Power'] = float(loadpoint['chargePower']) # watt
-            #self._dbusservice['/Current'] = float(loadpoint['chargeCurrents'][0])
+            self._dbusservice['/Current'] = float(loadpoint['chargeCurrents'][0])
 
-            #self._dbusservice['/SetCurrent'] = float(loadpoint['chargeCurrents'][0])
+            self._dbusservice['/SetCurrent'] = float(loadpoint['chargeCurrents'][0])
             self._dbusservice['/MaxCurrent'] = int(loadpoint['maxCurrent']) # int(data['ama'])
 
 
@@ -169,7 +169,7 @@ class DbusEvccChargerService:
                 self._dbusservice['/Mode'] = 0
                 self._dbusservice['/StartStop'] = 1
 
-	        # 0:EVdisconnected; 1:Connected; 2:Charging; 3:Charged; 4:Wait sun; 5:Wait RFID; 6:Wait enable; 7:Low SOC; 8:Ground error; 9:Welded contacts error; defaut:Unknown;
+                # 0:EVdisconnected; 1:Connected; 2:Charging; 3:Charged; 4:Wait sun; 5:Wait RFID; 6:Wait enable; 7:Low SOC; 8:Ground error; 9:Welded contacts error; defaut:Unknown;
             status = 0
             if loadpoint['connected'] == False:
                 status = 0
@@ -189,7 +189,7 @@ class DbusEvccChargerService:
             if status == 0:
                 self._dbusservice['/ChargingTime'] = 0
             else:
-                self._dbusservice['/ChargingTime'] = int(loadpoint["chargeDuration"])/1000000000  # s
+                self._dbusservice['/ChargingTime'] = int(loadpoint["chargeDuration"])  # s
 
             # logging
             logging.debug("Wallbox Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
