@@ -139,5 +139,8 @@ rm -rf "$TMP_DIR"
 rm -f "$INSTALL_DIR/update.zip"
 rm -rf "$INSTALL_DIR"/dbus-evcc-*
 
+echo "🔧 Setze Ausführbarkeit für Hilfsskripte..."
+chmod a+x "$INSTALL_DIR/install.sh" "$INSTALL_DIR/uninstall.sh" "$INSTALL_DIR/restart.sh"
+
 echo ""
 echo "✅ Update auf Version $TARGET_VERSION erfolgreich abgeschlossen."
