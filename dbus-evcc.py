@@ -39,8 +39,7 @@ class DbusEvccChargerService:
 
         # get data from evcc
         data = self._getEvccChargerData()
-        result = data["result"]
-        loadpoint = result["loadpoints"][lpInstance]
+        loadpoint = data["loadpoints"][lpInstance]
 
         # Set custom name from loadpoint title
         customname = str(loadpoint['title'])
@@ -110,21 +109,25 @@ class DbusEvccChargerService:
 
         return URL
 
-    def _getEvccChargerData(self):
-        URL = self._getEvccChargerStatusUrl()
-        request_data = requests.get(url=URL)
+def _getEvccChargerData(self):
+    URL = self._getEvccChargerStatusUrl()
+    request_data = requests.get(url=URL)
 
-        # check for response
-        if not request_data:
-            raise ConnectionError("No response from EVCC-Charger - %s" % (URL))
+    # check for response
+    if not request_data:
+        raise ConnectionError("No response from EVCC-Charger - %s" % (URL))
 
-        json_data = request_data.json()
+    json_data = request_data.json()
 
-        # check for Json
-        if not json_data:
-            raise ValueError("Converting response to JSON failed")
+    # check for Json
+    if not json_data:
+        raise ValueError("Converting response to JSON failed")
 
-        return json_data
+    # Anpassung für evcc >= 0.207 (kein result mehr)
+    if "result" in json_data:
+        json_data = json_data["result"]
+
+    return json_data
 
     def _signOfLife(self):
         logging.info("--- Start: sign of life ---")
@@ -139,8 +142,7 @@ class DbusEvccChargerService:
             config = self._getConfig()
             lpInstance = int(config['DEFAULT']['LoadpointInstance'])
             data = self._getEvccChargerData()
-            result = data["result"]
-            loadpoint = result["loadpoints"][lpInstance]
+            loadpoint = data["loadpoints"][lpInstance]
 
             # send data to DBus
 
