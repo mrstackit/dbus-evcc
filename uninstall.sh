@@ -34,6 +34,7 @@ fi
 # Installationsverzeichnis entfernen
 if [ -d "$SCRIPT_DIR" ]; then
     echo "Entferne Installationsverzeichnis: $SCRIPT_DIR"
+    cd /tmp
     rm -rf "$SCRIPT_DIR"
 fi
 
