@@ -27,7 +27,10 @@ class DbusEvccChargerService:
         lpInstance = int(config['DEFAULT']['LoadpointInstance'])
         acPosition = int(config['DEFAULT']['AcPosition'])
 
-        self._dbusservice = VeDbusService("{}.http_{:02d}".format(servicename, deviceinstance))
+        self._dbusservice = VeDbusService(
+            "{}.http_{:02d}".format(servicename, deviceinstance),
+            register=False  # <- wichtig
+        )
         self._paths = paths
 
         logging.debug("%s /DeviceInstance = %d" % (servicename, deviceinstance))
@@ -83,6 +86,9 @@ class DbusEvccChargerService:
 
         # add _signOfLife 'timer' to get feedback in log every 5minutes
         gobject.timeout_add(self._getSignOfLifeInterval() * 60 * 1000, self._signOfLife)
+
+        # Jetzt registrieren
+        self._dbusservice.register()
 
     def _getConfig(self):
         config = configparser.ConfigParser()
