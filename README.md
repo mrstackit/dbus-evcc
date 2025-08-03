@@ -11,7 +11,7 @@ After that call the install.sh script.
 
 The following script should do everything for you:
 ```
-wget https://github.com/tm-107/dbus-evcc/archive/refs/heads/main.zip
+wget https://github.com/mrstackit/dbus-evcc/archive/refs/heads/main.zip
 unzip main.zip "dbus-evcc-main/*" -d /data
 mv /data/dbus-evcc-main /data/dbus-evcc
 chmod a+x /data/dbus-evcc/install.sh /data/dbus-evcc/uninstall.sh /data/dbus-evcc/restart.sh
