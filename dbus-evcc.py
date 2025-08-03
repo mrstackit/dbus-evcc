@@ -109,25 +109,25 @@ class DbusEvccChargerService:
 
         return URL
 
-def _getEvccChargerData(self):
-    URL = self._getEvccChargerStatusUrl()
-    request_data = requests.get(url=URL)
+    def _getEvccChargerData(self):
+        URL = self._getEvccChargerStatusUrl()
+        request_data = requests.get(url=URL)
 
-    # check for response
-    if not request_data:
-        raise ConnectionError("No response from EVCC-Charger - %s" % (URL))
+        # check for response
+        if not request_data:
+            raise ConnectionError("No response from EVCC-Charger - %s" % (URL))
 
-    json_data = request_data.json()
+        json_data = request_data.json()
 
-    # check for Json
-    if not json_data:
-        raise ValueError("Converting response to JSON failed")
+        # check for Json
+        if not json_data:
+            raise ValueError("Converting response to JSON failed")
 
-    # Anpassung für evcc >= 0.207 (kein result mehr)
-    if "result" in json_data:
-        json_data = json_data["result"]
+        # Anpassung für evcc >= 0.207 (kein result mehr)
+        if "result" in json_data:
+            json_data = json_data["result"]
 
-    return json_data
+        return json_data
 
     def _signOfLife(self):
         logging.info("--- Start: sign of life ---")
